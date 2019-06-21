@@ -1,0 +1,39 @@
+#
+# Playbook to set up a Kubernetes cluster.
+#
+--- 
+
+- name: "LoadBalancer"
+  hosts: lb
+  roles:
+    - {role: nginx}
+  tags:
+    - ha
+
+- name: "Etcd"
+  hosts: etcd
+  roles:
+    - {role: prepare}
+    - {role: etcd}
+  tags:
+    - etcd
+
+- name: "Kubernetes Control Plane"
+  hosts: masters
+  roles:
+    - {role: cri}
+    - {role: prepare}
+    - {role: master}
+    - {role: add-labels}
+  tags:
+    - masters
+
+- name: "Kuernetes Workers"
+  hosts: workers
+  roles:
+    - {role: worker }
+    - {role: add-labels }
+  tags:
+    - workers
+
+

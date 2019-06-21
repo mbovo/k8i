@@ -1,0 +1,17 @@
+namespace: "mbovo"
+name: "mbovo_k8i"
+description: "Kubernetes Installer"
+version: "1.0.0"
+readme: "README.md"
+authors:
+  - "Manuel Bovo <manuel.bovo@gmail.com"
+dependencies: []
+license:
+  - "GPLv3"
+tags:
+  - kubernetes
+  - kubeadm
+  - installer
+  - cluster
+repository: "https://www.github.com/mbovo/k8i"
+

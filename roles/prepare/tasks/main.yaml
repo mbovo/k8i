@@ -1,0 +1,65 @@
+# kubernetes cluster installator ansible roles
+# Copyright (C) 2017  Manuel Bovo
+
+# This program is free software: you can redistribute it and/or modify
+# it under the terms of the GNU General Public License as published by
+# the Free Software Foundation, either version 3 of the License, or
+# (at your option) any later version.
+
+# This program is distributed in the hope that it will be useful,
+# but WITHOUT ANY WARRANTY; without even the implied warranty of
+# MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+# GNU General Public License for more details.
+
+# You should have received a copy of the GNU General Public License
+# along with this program.  If not, see <https://www.gnu.org/licenses/>.
+---
+
+- name: "Add kubernetes repo for centos"
+  yum_repository:
+    name: "kubernetes"
+    description: "Kubernetes repo"
+    baseurl: https://packages.cloud.google.com/yum/repos/kubernetes-el7-x86_64
+    gpgcheck: yes
+    repo_gpgcheck: no
+    gpgkey: https://packages.cloud.google.com/yum/doc/yum-key.gpg https://packages.cloud.google.com/yum/doc/rpm-package-key.gpg
+
+- name: Install packages
+  yum:
+    name: "{{item}}"
+    state: present
+    disable_gpg_check: false
+  with_items: "{{packages}}"
+  register: kube_packages
+
+- include: "swap.yml"
+- include: "selinux.yml"
+
+- name: "Ensure target directory exists"
+  file:
+    dest: "/var/lib/kubelet"
+    state: directory
+    recurse: True
+
+- name: "Copying docker config.json"
+  copy:
+    remote_src: True
+    src: "/root/.docker/config.json"
+    dest: "/var/lib/kubelet/config.json"
+
+
+## DON'T DO IT (for stability)
+# # Docker is configured to use cgroupfs this must be setted
+# - name: Set cgroups driver to 'cgroupfs'
+#   lineinfile:
+#     path:  "/etc/systemd/system/kubelet.service.d/10-kubeadm.conf"
+#     regexp: '^Environment="KUBELET_CGROUP_ARGS=--cgroup-driver=systemd"'
+#     line: 'Environment="KUBELET_CGROUP_ARGS=--cgroup-driver=cgroupfs"'
+#     state: present
+#     create: no
+#     backrefs: yes
+#   register: kubelet_driver
+
+# - name: Reload systemd units
+#   command: systemctl daemon-reload
+#   when: kubelet_driver.changed

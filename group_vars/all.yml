@@ -1,0 +1,17 @@
+# GLOBAL VARIABLES
+---
+############################################################
+# Base settings
+CLUSTER_NAME: "test"
+DNS_NAME: "cluster.local"
+APISERVER_DNS: "api.{{DNS_NAME}}"
+############################################################
+# Network settings
+NETWORK_PLUGIN: wave
+POD_NETWORK_CIDR: 10.244.0.0/16
+FLANNEL_IFACE_RE: 192.168.60
+############################################################
+# Software versions
+KUBERNETES_VERSION: "1.15"
+CRI: docker
+CRI_VERSION: ce-18.06.2.ce
