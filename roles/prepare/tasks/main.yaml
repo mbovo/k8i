@@ -15,6 +15,11 @@
 # along with this program.  If not, see <https://www.gnu.org/licenses/>.
 ---
 
+- name: "System update"
+  yum:
+    name: '*'
+    state: latest
+
 - name: "Add kubernetes repo for centos"
   yum_repository:
     name: "kubernetes"
@@ -26,26 +31,12 @@
 
 - name: Install packages
   yum:
-    name: "{{item}}"
+    name: "{{packages}}"
     state: present
-    disable_gpg_check: false
-  with_items: "{{packages}}"
   register: kube_packages
 
 - include: "swap.yml"
 - include: "selinux.yml"
-
-- name: "Ensure target directory exists"
-  file:
-    dest: "/var/lib/kubelet"
-    state: directory
-    recurse: True
-
-- name: "Copying docker config.json"
-  copy:
-    remote_src: True
-    src: "/root/.docker/config.json"
-    dest: "/var/lib/kubelet/config.json"
 
 
 ## DON'T DO IT (for stability)

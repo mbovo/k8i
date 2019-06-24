@@ -36,11 +36,9 @@
   command: "modprobe {{item}}"
   with_items:
     - br_netfilter
-  when: new_packages.changed
 
 - name: "Reload sysctl"
   command: "sysctl -p"
-  when: new_packages.changed
 
 - stat:
     path: "/etc/fstab.bak"

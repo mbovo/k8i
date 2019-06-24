@@ -15,15 +15,8 @@
 # along with this program.  If not, see <https://www.gnu.org/licenses/>.
 ---
 
-
-- name: Upload etcd script"
-  template:
-    src: etcd.sh.j2
-    dest: /root/etcd.sh
-    mode: u+rwx
-  run_once: True
-
-- name: "Running etcd.sh"
-  shell: /root/etcd.sh
-  run_once: True
-
+docker_kernel_options:
+  - "net.ipv4.ip_forward = 1"
+  - "net.bridge.bridge-nf-call-arptables = 1"
+  - "net.bridge.bridge-nf-call-iptables = 1"
+timezone: "Europe/Rome"
