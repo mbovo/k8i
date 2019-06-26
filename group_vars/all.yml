@@ -4,6 +4,7 @@
 # Base settings
 CLUSTER_NAME: "test"
 DNS_NAME: "cluster.local"
+CLUSTER_DOMAIN: "cluster.local"
 APISERVER_DNS: "api.{{DNS_NAME}}"
 ############################################################
 # Network settings
