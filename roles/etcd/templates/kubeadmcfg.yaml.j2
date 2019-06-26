@@ -1,0 +1,21 @@
+apiVersion: "kubeadm.k8s.io/v1beta2"
+kind: ClusterConfiguration
+etcd:
+    local:
+        serverCertSANs:
+            - {{inventory_hostname}}
+            - {{ansible_fqdn}}
+            - {{ansible_hostname}}
+        peerCertSANs:
+            - {{inventory_hostname}}
+            - {{ansible_fqdn}}
+            - {{ansible_hostname}}
+        extraArgs:
+            initial-cluster: {% for host in groups['etcd'] %}{{hostvars[host]['ansible_hostname']}}=https://{{hostvars[host]['inventory_hostname']}}:2380{% if not loop.last %},{% endif %}{% endfor %}
+
+            initial-cluster-state: new
+            name: {{ansible_hostname}}
+            listen-peer-urls: https://{{inventory_hostname}}:2380
+            listen-client-urls: https://{{inventory_hostname}}:2379
+            advertise-client-urls: https://{{inventory_hostname}}:2379
+            initial-advertise-peer-urls: https://{{inventory_hostname}}:2380

@@ -1,6 +1,6 @@
 
 {% for host in groups['etcd'] %}
-mkdir -p /tmp/{{ host }}
+mkdir -p {{etcd_tmp_path}}/{{ host }}
 {% endfor %}
 
 ETCDHOSTS=({% for host in groups['etcd'] %}{{host}} {% endfor %})
@@ -9,7 +9,7 @@ NAMES=({% for host in groups['etcd'] %}"{{hostvars[host]['inventory_hostname']}}
 for i in "${!ETCDHOSTS[@]}"; do
 HOST=${ETCDHOSTS[$i]}
 NAME=${NAMES[$i]}
-cat << EOF > /tmp/${HOST}/kubeadmcfg.yaml
+cat << EOF > {{etcd_tmp_path}}/${HOST}/kubeadmcfg.yaml
 apiVersion: "kubeadm.k8s.io/v1beta2"
 kind: ClusterConfiguration
 etcd:
@@ -33,20 +33,20 @@ kubeadm init phase certs etcd-ca
 
 {% for host in groups['etcd'] %}
 
-kubeadm init phase certs etcd-server --config=/tmp/{{host}}/kubeadmcfg.yaml
-kubeadm init phase certs etcd-peer --config=/tmp/{{host}}/kubeadmcfg.yaml
-kubeadm init phase certs etcd-healthcheck-client --config=/tmp/{{host}}/kubeadmcfg.yaml
-kubeadm init phase certs apiserver-etcd-client --config=/tmp/{{host}}/kubeadmcfg.yaml
-cp -R /etc/kubernetes/pki /tmp/{{host}}/
+kubeadm init phase certs etcd-server --config={{etcd_tmp_path}}/{{host}}/kubeadmcfg.yaml
+kubeadm init phase certs etcd-peer --config={{etcd_tmp_path}}/{{host}}/kubeadmcfg.yaml
+kubeadm init phase certs etcd-healthcheck-client --config={{etcd_tmp_path}}/{{host}}/kubeadmcfg.yaml
+kubeadm init phase certs apiserver-etcd-client --config={{etcd_tmp_path}}/{{host}}/kubeadmcfg.yaml
+cp -R /etc/kubernetes/pki {{etcd_tmp_path}}/{{host}}/
 # cleanup non-reusable certificates
 find /etc/kubernetes/pki -not -name ca.crt -not -name ca.key -type f -delete
 # cleanup non exportable certs
-find /tmp/{{host}} -name ca.key -type f -delete
+find {{etcd_tmp_path}}/{{host}} -name ca.key -type f -delete
 
 {% endfor %}
 
 # create static manifests for etcd pods
-#kubeadm init phase etcd local --config=/tmp/${HOST0}/kubeadmcfg.yaml
+#kubeadm init phase etcd local --config={{etcd_tmp_path}}/${HOST0}/kubeadmcfg.yaml
 
 
 #kubeadm init --config kubeadm-config.yaml --upload-certs

@@ -15,15 +15,60 @@
 # along with this program.  If not, see <https://www.gnu.org/licenses/>.
 ---
 
+- name: "Local tmp directory"
+  file:
+    dest: "{{local_tmp_path}}"
+    state: directory
+  delegate_to: localhost
+  become: false
+  run_once: True
 
-- name: Upload etcd script"
+- name: "Generate Etcd CA certs+key"
+  shell: kubeadm init phase certs etcd-ca
+  run_once: True
+
+- name: "Copy CA Certs locally"
+  fetch:
+    src: "{{item}}"
+    dest: "{{local_tmp_path}}/"
+    flat: True
+  with_items:
+    - "/etc/kubernetes/pki/etcd/ca.crt"
+    - "/etc/kubernetes/pki/etcd/ca.key"
+  run_once: True  
+
+- name: "Remote tmp directory"
+  file:
+    dest: "{{etcd_tmp_path}}"
+    state: directory
+
+- name: Template etcd config"
   template:
-    src: etcd.sh.j2
-    dest: /root/etcd.sh
+    src: kubeadmcfg.yaml.j2
+    dest: "{{etcd_tmp_path}}/kubeadmcfg.yaml"
     mode: u+rwx
-  run_once: True
 
-- name: "Running etcd.sh"
-  shell: /root/etcd.sh
-  run_once: True
+- name: "PKI directory"
+  file:
+    path: /etc/kubernetes/pki/etcd"
+    state: directory
 
+- name: Upload CA certs 
+  copy:
+    src: "{{local_tmp_path}}/{{item}}"
+    dest: "/etc/kubernetes/pki/etcd/"
+  with_items:
+    - "ca.key"
+    - "ca.crt"
+
+- name: "Create server cert"
+  shell: kubeadm init phase certs etcd-server --config={{etcd_tmp_path}}/kubeadmcfg.yaml
+- name: "Create peer cert"
+  shell: kubeadm init phase certs etcd-peer --config={{etcd_tmp_path}}/kubeadmcfg.yaml
+- name: "Create healtcheck cert"
+  shell: kubeadm init phase certs etcd-healthcheck-client --config={{etcd_tmp_path}}/kubeadmcfg.yaml
+- name: "Create client cert for apiserver"
+  shell: kubeadm init phase certs apiserver-etcd-client --config={{etcd_tmp_path}}/kubeadmcfg.yaml
+
+- name: "Generate static manifests files"
+  shell: kubeadm init phase etcd local --config={{etcd_tmp_path}}/kubeadmcfg.yaml
