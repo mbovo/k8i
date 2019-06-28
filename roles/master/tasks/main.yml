@@ -4,7 +4,7 @@
 - name: Templating kubeadm config
   template:
     src: kubeadmcfg.yaml.j2
-    dest: /etc/kubeadmcfg.yaml
+    dest: /etc/kubernetes/kubeadmcfg.yaml
 
 - name: "Enable kubelet"
   service:
