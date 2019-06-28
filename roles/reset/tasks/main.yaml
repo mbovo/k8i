@@ -22,12 +22,14 @@
   with_items:
     - kubelet
     - docker
+  ignore_errors: True
 
 - name: "Erasing etcd data"
   file:
     path: /var/lib/etcd/member
     state: absent 
+  ignore_errors: True
 
 - name: "Reset cluster"
   shell: kubeadm reset -f
-
+  ignore_errors: True

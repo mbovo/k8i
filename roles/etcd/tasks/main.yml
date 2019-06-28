@@ -26,6 +26,7 @@
 - name: "Generate Etcd CA certs+key"
   shell: kubeadm init phase certs etcd-ca
   run_once: True
+  when: "not '/etc/kubernetes/pki/etcd/ca.crt' is exists"
 
 - name: "Copy CA Certs locally"
   fetch:
