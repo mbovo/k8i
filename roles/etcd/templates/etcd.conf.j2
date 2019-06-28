@@ -1,0 +1,34 @@
+---
+name: {{ ansible_hostname }}
+data-dir: /var/lib/etcd
+snapshot-count: 10000
+heartbeat-interval: 100
+election-timeout: 1000
+quota-backend-bytes: 0
+listen-peer-urls: "https://{{ inventory_hostname }}:2380,https://127.0.0.1:2380"
+listen-client-urls: "https://{{ inventory_hostname }}:2379,https://127.0.0.1:2379"
+max-snapshots: 5
+max-wals: 5
+initial-advertise-peer-urls: https://{{inventory_hostname}}:2380
+advertise-client-urls: "https://{{ inventory_hostname }}:2379"
+initial-cluster: "{% for host in groups['etcd'] %}{{hostvars[host]['ansible_hostname']}}=https://{{hostvars[host]['inventory_hostname']}}:2380{% if not loop.last %},{% endif %}{% endfor %}"
+initial-cluster-token: 'etcd-cluster-{{ CLUSTER_NAME }}'
+initial-cluster-state: 'new'
+client-transport-security:
+  cert-file: /etc/kubernetes/pki/etcd/server.crt
+  key-file: /etc/kubernetes/pki/etcd/server.key
+  client-cert-auth: true
+  trusted-ca-file: /etc/kubernetes/pki/etcd/ca.crt
+  auto-tls: false
+peer-transport-security:
+  cert-file: /etc/kubernetes/pki/etcd/peer.crt
+  key-file: /etc/kubernetes/pki/etcd/peer.key
+  client-cert-auth: true
+  trusted-ca-file: /etc/kubernetes/pki/etcd/ca.crt
+  auto-tls: false
+debug: false
+logger: zap
+log-outputs: [stdout]
+force-new-cluster: false
+auto-compaction-mode: periodic
+auto-compaction-retention: "1"

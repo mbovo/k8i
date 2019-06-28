@@ -12,4 +12,4 @@
     enabled: yes
 
 - name: "Init the cluster"
-  shell: kubeadm init --config /etc/kubeadmcfg.yaml --upload-certs
+  shell: kubeadm init --config /etc/kubernetes/kubeadmcfg.yaml --upload-certs
