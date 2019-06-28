@@ -36,6 +36,13 @@
     state: present
   register: kube_packages
 
+- name: "Load kernel modules"
+  modprobe: 
+    name: "{{item}}"
+    state: present
+  with_items:
+    - br_netfilter
+
 - include: "swap.yml"
 - include: "selinux.yml"
 
