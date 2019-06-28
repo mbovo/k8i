@@ -1,34 +1,24 @@
----
-name: {{ ansible_hostname }}
-data-dir: /var/lib/etcd
-snapshot-count: 10000
-heartbeat-interval: 100
-election-timeout: 1000
-quota-backend-bytes: 0
-listen-peer-urls: "https://{{ inventory_hostname }}:2380,https://127.0.0.1:2380"
-listen-client-urls: "https://{{ inventory_hostname }}:2379,https://127.0.0.1:2379"
-max-snapshots: 5
-max-wals: 5
-initial-advertise-peer-urls: https://{{inventory_hostname}}:2380
-advertise-client-urls: "https://{{ inventory_hostname }}:2379"
-initial-cluster: "{% for host in groups['etcd'] %}{{hostvars[host]['ansible_hostname']}}=https://{{hostvars[host]['inventory_hostname']}}:2380{% if not loop.last %},{% endif %}{% endfor %}"
-initial-cluster-token: 'etcd-cluster-{{ CLUSTER_NAME }}'
-initial-cluster-state: 'new'
-client-transport-security:
-  cert-file: /etc/kubernetes/pki/etcd/server.crt
-  key-file: /etc/kubernetes/pki/etcd/server.key
-  client-cert-auth: true
-  trusted-ca-file: /etc/kubernetes/pki/etcd/ca.crt
-  auto-tls: false
-peer-transport-security:
-  cert-file: /etc/kubernetes/pki/etcd/peer.crt
-  key-file: /etc/kubernetes/pki/etcd/peer.key
-  client-cert-auth: true
-  trusted-ca-file: /etc/kubernetes/pki/etcd/ca.crt
-  auto-tls: false
-debug: false
-logger: zap
-log-outputs: [stdout]
-force-new-cluster: false
-auto-compaction-mode: periodic
-auto-compaction-retention: "1"
+# [member]
+ETCD_NAME="{{ ansible_hostname }}"
+ETCD_DATA_DIR="/var/lib/etcd/default.etcd"
+ETCD_LISTEN_PEER_URLS="https://{{ inventory_hostname }}:2380"
+ETCD_LISTEN_CLIENT_URLS="https://{{ inventory_hostname }}:2379"
+#[Clustering]
+ETCD_INITIAL_ADVERTISE_PEER_URLS="https://{{inventory_hostname}}:2380"
+ETCD_ADVERTISE_CLIENT_URLS="https://{{ inventory_hostname }}:2379"
+ETCD_INITIAL_CLUSTER="{% for host in groups['etcd'] %}{{hostvars[host]['ansible_hostname']}}=https://{{hostvars[host]['inventory_hostname']}}:2380{% if not loop.last %},{% endif %}{% endfor %}"
+ETCD_INITIAL_CLUSTER_TOKEN="{{ CLUSTER_NAME }}"
+ETCD_INITIAL_CLUSTER_STATE="new"
+#[Security]
+ETCD_CERT_FILE="/etc/kubernetes/pki/etcd/server.crt"
+ETCD_KEY_FILE="/etc/kubernetes/pki/etcd/server.key"
+ETCD_CLIENT_CERT_AUTH="true"
+ETCD_TRUSTED_CA_FILE="/etc/kubernetes/pki/etcd/ca.crt"
+ETCD_AUTO_TLS="false"
+ETCD_PEER_CERT_FILE="/etc/kubernetes/pki/etcd/peer.crt"
+ETCD_PEER_KEY_FILE="/etc/kubernetes/pki/etcd/peer.key"
+ETCD_PEER_CLIENT_CERT_AUTH="true"
+ETCD_PEER_TRUSTED_CA_FILE="/etc/kubernetes/pki/etcd/ca.crt"
+ETCD_PEER_AUTO_TLS="false"
+#[Logging]
+ETCD_DEBUG="true"

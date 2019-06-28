@@ -22,11 +22,12 @@
   with_items:
     - kubelet
     - docker
+    - etcd
   ignore_errors: True
 
 - name: "Erasing etcd data"
   file:
-    path: /var/lib/etcd/member
+    path: /var/lib/etcd
     state: absent 
   ignore_errors: True
 

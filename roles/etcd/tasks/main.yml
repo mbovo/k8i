@@ -61,23 +61,18 @@
   with_items:
     - "ca.key"
     - "ca.crt"
-  register: upload_ca
 
 - name: "Create server cert"
   shell: kubeadm init phase certs etcd-server --config={{etcd_tmp_path}}/kubeadmcfg.yaml
-  when: upload_ca is changed
 
 - name: "Create peer cert"
   shell: kubeadm init phase certs etcd-peer --config={{etcd_tmp_path}}/kubeadmcfg.yaml
-  when: upload_ca is changed
 
 - name: "Create healtcheck cert"
   shell: kubeadm init phase certs etcd-healthcheck-client --config={{etcd_tmp_path}}/kubeadmcfg.yaml
-  when: upload_ca is changed
 
 - name: "Create client cert for apiserver"
   shell: kubeadm init phase certs apiserver-etcd-client --config={{etcd_tmp_path}}/kubeadmcfg.yaml
-  when: upload_ca is changed
 
 #- name: "Generate static manifests files"
 #  shell: kubeadm init phase etcd local --config={{etcd_tmp_path}}/kubeadmcfg.yaml
@@ -90,12 +85,12 @@
 - name: Write etcd config file
   template:
     src: etcd.conf.j2
-    dest: /etc/etcd/etcd.conf.yml
+    dest: /etc/etcd/etcd.conf
     group: etcd
     owner: etcd
-    mode: 0644
+    mode: 064
 
-- name: Make sure database directory /var/lib/etcd exists and has the right permissions
+- name: Make sure database directory /var/lib/etcd exists and has proper permissions
   file:
     path: /var/lib/etcd
     state: directory
@@ -103,17 +98,13 @@
     group: etcd
     mode: 0755
 
-- name: Patch etcd config file
-  lineinfile:
-      path: /usr/lib/systemd/system/etcd.service
-      regexp: '^(.*)Xms(\\d+)m(.*)$'
-      regexp: '(.*usr.bin.etcd)(.*)$'
-      line: '\1 --config-file /etc/etcd/etcd.conf.yml"'
-      backrefs: yes
-
-- name: Reload systemd
-  systemd:
-    daemon_reload: yes
+- name: "Set proper permission to pki folder"
+  file:
+    path: /etc/kubernetes/pki/etcd
+    state: directory
+    owner: etcd
+    group: etcd
+    recurse: yes
 
 - name: Enable and start etcd
   service:
