@@ -19,6 +19,7 @@
   yum:
     name: '*'
     state: latest
+  when: system_update|default('false')|bool
 
 - name: "Add kubernetes repo for centos"
   yum_repository:

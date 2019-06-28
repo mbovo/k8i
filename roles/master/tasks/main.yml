@@ -1,2 +1,15 @@
 ---
 # tasks file for master
+
+- name: Templating kubeadm config
+  template:
+    src: kubeadmcfg.yaml.j2
+    dest: /etc/kubeadmcfg.yaml
+
+- name: "Enable kubelet"
+  service:
+    name: "kubelet"
+    enabled: yes
+
+- name: "Init the cluster"
+  shell: kubeadm init --config /etc/kubeadmcfg.yaml --upload-certs

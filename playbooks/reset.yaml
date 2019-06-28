@@ -1,0 +1,10 @@
+#
+# Playbook to set up a Kubernetes cluster.
+#
+--- 
+- name: "Reset cluster"
+  hosts: masters:workers:etcd
+  roles:
+    - {role: reset} 
+
+

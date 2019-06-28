@@ -5,6 +5,11 @@
 
 - name: "LoadBalancer"
   hosts: lb
+  module_defaults:
+    yum:
+      lock_timeout: 5
+    dnf:
+      lock_timeout: 5
   roles:
     - {role: nginx}
   tags:
@@ -12,28 +17,43 @@
 
 - name: "Etcd"
   hosts: etcd
+  module_defaults:
+    yum:
+      lock_timeout: 5
+    dnf:
+      lock_timeout: 5
   roles:
-    - {role: prepare}
-    - {role: etcd}
+    - {role: prepare, tags: etcd_prepare}
+    - {role: etcd,    tags: etcd_install}
   tags:
     - etcd
 
 - name: "Kubernetes Control Plane"
   hosts: masters
+  module_defaults:
+    yum:
+      lock_timeout: 5
+    dnf:
+      lock_timeout: 5
   roles:
-    - {role: cri}
-    - {role: prepare}
-    - {role: master}
-#    - {role: add-labels}
+    - {role: cri    ,   tags: masters_cri }
+    - {role: prepare,   tags: masters_prepare}
+    - {role: master ,   tags: masters_install}
+    - {role: add-labels, tags: masters_label}
   tags:
     - masters
 
 - name: "Kuernetes Workers"
   hosts: workers
+  module_defaults:
+    yum:
+      lock_timeout: 5
+    dnf:
+      lock_timeout: 5
   roles:
-    - {role: worker }
-#    - {role: add-labels }
+    - {role: cri    ,   tags: workers_cri}
+    - {role: prepare,  tags: workers_prepare}
+    - {role: worker ,   tags: workers_install}
+    - {role: add-labels, tags: workers_label }
   tags:
     - workers
-
-

@@ -1,7 +1,7 @@
 apiVersion: kubeadm.k8s.io/v1beta2
 kind: ClusterConfiguration
 kubernetesVersion: v{{KUBERNETES_VERSION}}
-controlPlaneEndpoint: "{{hostvars[groups['lb'][0]]['ansible_hostname']}}:6443"
+controlPlaneEndpoint: "{{hostvars[ groups['lb'][0] ]['inventory_hostname']}}:6443"
 etcd:
     external:
         endpoints:
@@ -20,14 +20,14 @@ apiServer:
     authorization-mode: "Node,RBAC"
     apiserver-count: "{{ groups['masters'] | length }}"
     feature-gates: "TTLAfterFinished=true"
-    audit-log-path: /var/log/kubernetes/audit
-    audit-log-maxage: 2
+    audit-log-path: "/var/log/kubernetes/audit"
+    audit-log-maxage: "2"
   certSANs:
 {% for host in groups['masters'] %}
   - {{hostvars[host]['ansible_hostname']}}
   - {{hostvars[host]['inventory_hostname']}}
 {% endfor %}
-  - {{hostvars[groups['lb'][0]]['ansible_hostname']}}
+  - {{hostvars[groups['lb'][0]]['inventory_hostname']}}
   - {{APISERVER_DNS}}
   - 127.0.0.1
   timeoutForControlPlane: 4m0s
@@ -45,16 +45,7 @@ authentication:
   anonymous:
     enabled: false
   webhook:
-    cacheAuthorizedTTL: 5m0s
     enabled: true
-    cacheUnauthorizedTTL: 30s
-  x509:
-    clientCAFile: /etc/kubernetes/pki/ca.crt
-authorization:
-  mode: Webhook
-  webhook:
-    cacheAuthorizedTTL: 5m0s
-    cacheUnauthorizedTTL: 30s
 cgroupDriver: systemd
 clusterDomain: {{CLUSTER_DOMAIN}}
 containerLogMaxFiles: 5
