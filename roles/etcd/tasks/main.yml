@@ -63,12 +63,15 @@
 
 - name: "Create server cert"
   shell: kubeadm init phase certs etcd-server --config={{etcd_tmp_path}}/kubeadmcfg.yaml
+
 - name: "Create peer cert"
   shell: kubeadm init phase certs etcd-peer --config={{etcd_tmp_path}}/kubeadmcfg.yaml
+
 - name: "Create healtcheck cert"
   shell: kubeadm init phase certs etcd-healthcheck-client --config={{etcd_tmp_path}}/kubeadmcfg.yaml
+
 - name: "Create client cert for apiserver"
   shell: kubeadm init phase certs apiserver-etcd-client --config={{etcd_tmp_path}}/kubeadmcfg.yaml
 
-- name: "Generate static manifests files"
-  shell: kubeadm init phase etcd local --config={{etcd_tmp_path}}/kubeadmcfg.yaml
+#- name: "Generate static manifests files"
+#  shell: kubeadm init phase etcd local --config={{etcd_tmp_path}}/kubeadmcfg.yaml

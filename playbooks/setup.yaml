@@ -13,7 +13,7 @@
   roles:
     - {role: nginx}
   tags:
-    - ha
+    - lb
 
 - name: "Etcd"
   hosts: etcd
@@ -43,7 +43,7 @@
   tags:
     - masters
 
-- name: "Kuernetes Workers"
+- name: "Kubernetes Workers"
   hosts: workers
   module_defaults:
     yum:
