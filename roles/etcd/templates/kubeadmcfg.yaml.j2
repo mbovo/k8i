@@ -3,13 +3,19 @@ kind: ClusterConfiguration
 etcd:
     local:
         serverCertSANs:
-            - {{inventory_hostname}}
-            - {{ansible_fqdn}}
-            - {{ansible_hostname}}
+{% for host in groups['etcd'] %}
+            - {{hostvars[host]['ansible_hostname']}}
+            - {{hostvars[host]['inventory_hostname']}}
+            - {{hostvars[host]['ansible_fqdn']}}
+            - "*.{{DNS_NAME}}"
+{% endfor %}
         peerCertSANs:
-            - {{inventory_hostname}}
-            - {{ansible_fqdn}}
-            - {{ansible_hostname}}
+{% for host in groups['etcd'] %}
+            - {{hostvars[host]['ansible_hostname']}}
+            - {{hostvars[host]['inventory_hostname']}}
+            - {{hostvars[host]['ansible_fqdn']}}
+            - "*.{{DNS_NAME}}"
+{% endfor %}
         extraArgs:
             initial-cluster: {% for host in groups['etcd'] %}{{hostvars[host]['ansible_hostname']}}=https://{{hostvars[host]['inventory_hostname']}}:2380{% if not loop.last %},{% endif %}{% endfor %}
 

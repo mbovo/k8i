@@ -27,13 +27,9 @@
         dest: /etc/localtime
         state: link
 
-- name: "Install prereq"
-  yum:
-    name: ["epel-release", "yum-utils", "device-mapper-persistent-data", "lvm2", "bridge-utils", "libselinux-python", "nano" ]
-    state: latest
-
 - name: "Install docker repo"
   shell: yum-config-manager --add-repo https://download.docker.com/linux/centos/docker-ce.repo 
+
 - name: "Install docker"
   yum:
     name: docker-{{CRI_VERSION}}
@@ -77,15 +73,13 @@
     enabled: true
 
 - name: "Add kernel options"
-  lineinfile:
-    dest: "/etc/sysctl.conf"
-    line: "{{ item }}"
-    create: true
+  sysctl:
+    name: "{{item.name}}"
+    value: "{{item.value}}"
+    sysctl_set: yes
+    state: present
+    reload: yes
   with_items: "{{ docker_kernel_options }}"
-
-- name: "Reload sysctl"
-  command: "sysctl -p"
-
 
 - name: "Create docker client configuration"
   file:
