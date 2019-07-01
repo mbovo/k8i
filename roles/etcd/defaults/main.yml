@@ -16,4 +16,4 @@
 ---
 
 etcd_tmp_path: /tmp/etcd
-local_tmp_path: /tmp/k8i
+local_tmp_path: /tmp/k8i/etcd

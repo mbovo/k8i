@@ -1,2 +1,4 @@
 ---
 # defaults file for master
+
+local_tmp_path: /tmp/k8i
