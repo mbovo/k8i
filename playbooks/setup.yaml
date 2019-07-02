@@ -24,7 +24,7 @@
     - {role: prepare,    tags: masters_prepare}
     - {role: cri    ,    tags: masters_cri }
     - {role: master ,    tags: masters_install}
-    - {role: add-labels, tags: masters_label}
+#    - {role: add-labels, tags: masters_label}
   tags:
     - masters
 
