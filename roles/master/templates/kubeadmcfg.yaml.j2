@@ -13,7 +13,7 @@ etcd:
         keyFile: /etc/kubernetes/pki/apiserver-etcd-client.key
 networking:
   serviceSubnet: "10.96.0.0/12"
-  podSubnet: "10.100.0.1/24"
+  podSubnet: "10.244.0.0/16"
   dnsDomain: "{{CLUSTER_DOMAIN}}"
 apiServer:
   extraArgs:

@@ -15,17 +15,17 @@
 # along with this program.  If not, see <https://www.gnu.org/licenses/>.
 ---
 
-- name: "Update local timezone"
-  block:
-    - name: "Remove old timezone"
-      file: 
-        path: /etc/localtime
-        state: absent
-    - name: "Force timezone"
-      file:
-        src: /usr/share/zoneinfo/{{timezone}}
-        dest: /etc/localtime
-        state: link
+# - name: "Update local timezone"
+#   block:
+#     - name: "Remove old timezone"
+#       file: 
+#         path: /etc/localtime
+#         state: absent
+- name: "Force timezone"
+  file:
+    src: /usr/share/zoneinfo/{{timezone}}
+    dest: /etc/localtime
+    state: link
 
 - name: "Install docker repo"
   shell: yum-config-manager --add-repo https://download.docker.com/linux/centos/docker-ce.repo 

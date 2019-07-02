@@ -94,10 +94,28 @@
 - debug:
     msg: "TOKEN: {{TOKEN.stdout}} | HASH: {{HASH.stdout}}"
 
+- name: "Idempotency check (other masters)"
+  shell: kubeadm config view
+  register: is_master
+  changed_when: "is_master.rc != 0"
+  when: inventory_hostname not in groups['masters'][0]
+  ignore_errors: True
+
 - name: "Generate missing certs"
   shell: "kubeadm init --config /etc/kubernetes/kubeadmcfg.yaml phase certs all"
-  when: inventory_hostname not in groups['masters'][0]
+  when: 
+    - inventory_hostname not in groups['masters'][0]
+    - is_master.changed|bool
 
 - name: "Init other masters (if any)"
   shell: "kubeadm join {{groups['lb'][0]}}:6443 --token {{TOKEN.stdout}} --discovery-token-ca-cert-hash sha256:{{HASH.stdout}}  --control-plane"
-  when: inventory_hostname not in groups['masters'][0]
+  when: 
+    - inventory_hostname not in groups['masters'][0]
+    - is_master.changed|bool
+
+- name: "Apply CNI"
+  #shell: KUBECONFIG=/etc/kubernetes/admin.conf kubectl apply -f "https://cloud.weave.works/k8s/net?k8s-version=$(kubectl version | base64 | tr -d '\n')"
+  shell: KUBECONFIG=/etc/kubernetes/admin.conf kubectl apply -f https://docs.projectcalico.org/v3.7/manifests/canal.yaml
+  when: 
+    - inventory_hostname in groups['masters'][0]
+    - is_cluster.changed|bool
