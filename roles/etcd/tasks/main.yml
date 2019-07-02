@@ -26,7 +26,9 @@
 - name: "Generate Etcd CA certs+key"
   shell: kubeadm init phase certs etcd-ca
   run_once: True
-  when: "not '/etc/kubernetes/pki/etcd/ca.crt' is exists"
+  when: 
+    - "not '/etc/kubernetes/pki/etcd/ca.crt' is exists"
+    - inventory_hostname in groups['etcd'][0]
 
 - name: "Copy CA Certs locally"
   fetch:
@@ -37,6 +39,8 @@
     - "/etc/kubernetes/pki/etcd/ca.crt"
     - "/etc/kubernetes/pki/etcd/ca.key"
   run_once: True  
+  when: 
+    - inventory_hostname in groups['etcd'][0]
 
 - name: "Remote tmp directory"
   file:
@@ -61,6 +65,8 @@
   with_items:
     - "ca.key"
     - "ca.crt"
+  when: 
+    - inventory_hostname not in groups['etcd'][0]
 
 - name: "Create server cert"
   shell: kubeadm init phase certs etcd-server --config={{etcd_tmp_path}}/kubeadmcfg.yaml
@@ -74,8 +80,17 @@
 - name: "Create client cert for apiserver"
   shell: kubeadm init phase certs apiserver-etcd-client --config={{etcd_tmp_path}}/kubeadmcfg.yaml
 
-#- name: "Generate static manifests files"
-#  shell: kubeadm init phase etcd local --config={{etcd_tmp_path}}/kubeadmcfg.yaml
+- name: "Copy apiserver client certs locally"
+  fetch:
+    src: "{{item}}"
+    dest: "{{local_tmp_path}}/"
+    flat: True
+  with_items:
+    - "/etc/kubernetes/pki/apiserver-etcd-client.crt"
+    - "/etc/kubernetes/pki/apiserver-etcd-client.key"
+  run_once: True  
+  when: 
+    - inventory_hostname in groups['etcd'][0]  
 
 - name: Install etcd via package manager
   package:

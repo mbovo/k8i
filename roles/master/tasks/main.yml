@@ -1,6 +1,11 @@
 ---
 # tasks file for master
 
+- name: "PKI directory"
+  file:
+    path: /etc/kubernetes/pki
+    state: directory
+
 - name: Templating kubeadm config
   template:
     src: kubeadmcfg.yaml.j2
@@ -11,65 +16,88 @@
     name: "kubelet"
     enabled: yes
 
-## OLD method
-# - name: "Creating CA certs"
-#   shell: kubeadm init phase certs ca --config /etc/kubernetes/kubeadmcfg.yaml
-#   run_once: True
-#   when: inventory_hostname in groups['masters'][0]
+- name: "Idempotency check"
+  shell: kubeadm config view
+  register: is_cluster
+  changed_when: "is_cluster.rc != 0"
+  when: inventory_hostname in groups['masters'][0]
+  run_once: True
+  ignore_errors: True
 
-# - name: "Retrieve CA certs"
-#   fetch:
-#     src: "{{item}}"
-#     dest: "{{local_tmp_path}}/"
-#     flat: True
-#   with_items:
-#     - "/etc/kubernetes/pki/ca.crt"
-#     - "/etc/kubernetes/pki/ca.key"
-#   run_once: True  
-#   when: inventory_hostname in groups['masters'][0]
-
-# - name: "PKI directory"
-#   file:
-#     path: /etc/kubernetes/pki
-#     state: directory
-
-# - name: Upload CA certs 
-#   copy:
-#     src: "{{local_tmp_path}}/{{item}}"
-#     dest: "/etc/kubernetes/pki/"
-#   with_items:
-#     - "ca.key"
-#     - "ca.crt"
+- name: Upload apiserver-etcd-client certs 
+  copy:
+    src: "{{local_tmp_path}}/etcd/{{item}}"
+    dest: "/etc/kubernetes/pki/"
+  with_items:
+    - "apiserver-etcd-client.key"
+    - "apiserver-etcd-client.crt"
+  when: 
+    - is_cluster.changed|bool
 
 - name: "Init the first node"
   shell: "kubeadm init --config /etc/kubernetes/kubeadmcfg.yaml --upload-certs"
   register: init_first
+  when: 
+    - inventory_hostname in groups['masters'][0]
+    - is_cluster.changed|bool
+  run_once: True
+
+- name: "Retrieve CA certs"
+  fetch:
+    src: "{{item}}"
+    dest: "{{local_tmp_path}}/"
+    flat: True
+  with_items:
+    - "/etc/kubernetes/pki/ca.crt"
+    - "/etc/kubernetes/pki/ca.key"
+  run_once: True  
   when: inventory_hostname in groups['masters'][0]
+
+- name: Upload CA certs 
+  copy:
+    src: "{{local_tmp_path}}/{{item}}"
+    dest: "/etc/kubernetes/pki/"
+  with_items:
+    - "ca.key"
+    - "ca.crt"
 
 - name: Generate a join token
   shell: "kubeadm token create"
   register: TOKEN
-  changed_when: "TOKEN.rc > 0"
+  changed_when: "TOKEN.rc == 0"
+  failed_when: "TOKEN.rc != 0"
   when: 
     - inventory_hostname in groups['masters'][0]
     - groups['masters']|length > 1
+  run_once: True
 
 - name: Generate hash
   shell: "openssl x509 -pubkey -in /etc/kubernetes/pki/ca.crt | openssl rsa -pubin -outform der 2>/dev/null | openssl dgst -sha256 -hex | sed 's/^.* //'"
   register: HASH
-  changed_when: "HASH.rc > 0"
+  changed_when: "HASH.rc == 0"
+  failed_when: "HASH.rc != 0"
   when: 
     - inventory_hostname in groups['masters'][0]
     - groups['masters']|length > 1
+  run_once: True
 
-- name: Generate certificate key  
-  shell: kubeadm init phase upload-certs --upload-certs
-  register: CERTKEY
-  changed_when: "CERTKEY.rc > 0"
-  when: 
-    - inventory_hostname in groups['masters'][0]
-    - groups['masters']|length > 1
+# - name: Generate certificate key  
+#   shell: kubeadm init phase upload-certs --upload-certs | tail -1
+#   register: CERTKEY
+#   changed_when: "CERTKEY.rc == 0"
+#   failed_when: "CERTKEY.rc != 0"
+#   when: 
+#     - inventory_hostname in groups['masters'][0]
+#     - groups['masters']|length > 1
+#   run_once: True
+
+- debug:
+    msg: "TOKEN: {{TOKEN.stdout}} | HASH: {{HASH.stdout}}"
+
+- name: "Generate missing certs"
+  shell: "kubeadm init --config /etc/kubernetes/kubeadmcfg.yaml phase certs all"
+  when: inventory_hostname not in groups['masters'][0]
 
 - name: "Init other masters (if any)"
-  shell: "kubeadm join {{groups['lb'][0]['ansible_hostname']}}:6443 --token {{TOKEN.stdout}} --discovery-token-ca-cert-hash sha256:{{HASH.stdout}}  --experimental-control-plane --certificate-key {{CERTKEY.stdout}}"
+  shell: "kubeadm join {{groups['lb'][0]}}:6443 --token {{TOKEN.stdout}} --discovery-token-ca-cert-hash sha256:{{HASH.stdout}}  --control-plane"
   when: inventory_hostname not in groups['masters'][0]
