@@ -15,6 +15,13 @@
 # along with this program.  If not, see <https://www.gnu.org/licenses/>.
 ---
 
+- name: "Remove workers from cluster"
+  shell: "KUBECONFIG=/etc/kubernetes/admin.conf kubectl delete node {{ansible_hostname}}"
+  when:
+    - "'workers' in group_names"
+  delegate_to: "{{groups['masters'][0]}}"
+  ignore_errors: True
+
 - name: "Stopping services"
   service:
     name: "{{item}}"

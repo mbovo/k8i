@@ -24,7 +24,7 @@
     - {role: prepare,    tags: masters_prepare}
     - {role: cri    ,    tags: masters_cri }
     - {role: master ,    tags: masters_install}
-#    - {role: add-labels, tags: masters_label}
+    - {role: add-labels, tags: masters_label}
   tags:
     - masters
 
@@ -37,3 +37,10 @@
     - {role: add-labels, tags: workers_label }
   tags:
     - workers
+
+- name: "Remove Nodes"
+  hosts: workers
+  roles:
+    - {role: reset, when: "toRemove|default('false')|bool" }
+  tags:
+    - remove

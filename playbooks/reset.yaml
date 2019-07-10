@@ -3,7 +3,7 @@
 #
 --- 
 - name: "Reset cluster"
-  hosts: masters:workers:etcd
+  hosts: "{{target}}"
   roles:
     - {role: reset} 
 

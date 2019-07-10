@@ -15,10 +15,12 @@ all:
         masters:
     workers:
       hosts:
-        192.168.60.20[1:2]:
+        192.168.60.20[1-2]:
           node_labels: 
             - org.zroot.node=worker
             - org.zroot.cluster=test
+#        192.168.60.202:
+#          toRemove: true
     nodes:
       children:
         masters:
