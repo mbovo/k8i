@@ -26,8 +26,10 @@ apiServer:
   certSANs:
 {% for host in groups['masters'] %}
   - {{hostvars[host]['inventory_hostname']}}
+  - {{hostvars[host]['ansible_hostname']}}
 {% endfor %}
   - {{hostvars[groups['lb'][0]]['inventory_hostname']}}
+  - {{hostvars[groups['lb'][0]]['ansible_hostname']}}
   - {{APISERVER_DNS}}
   - 127.0.0.1
   timeoutForControlPlane: 4m0s
