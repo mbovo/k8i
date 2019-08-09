@@ -77,6 +77,9 @@
 
 - debug:
     msg: "TOKEN: {{TOKEN.stdout}} | HASH: {{HASH.stdout}}"
+  when: 
+    - inventory_hostname in groups['masters'][0]
+    - groups['masters']|length > 1
 
 - name: "Idempotency check (other masters)"
   shell: kubeadm config view
