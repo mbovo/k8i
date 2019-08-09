@@ -1,0 +1,16 @@
+{
+  "auths" : {
+{% for item in DOCKER_PRIVATE_REGISTRIES_AUTH: %}
+{% set auth_digest = item.user ~ ":" ~ item.password %}
+{% if loop.last %}
+    "{{item.host}}" : {
+      "auth" : "{{auth_digest|b64encode}}"
+    }
+{% else %}
+    "{{item.host}}" : {
+      "auth" : "{{auth_digest|b64encode}}"
+    },
+{% endif %}
+{% endfor %}
+  }
+}

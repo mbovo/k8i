@@ -1,0 +1,45 @@
+---
+# tasks file for worker
+
+- name: Generate a join token
+  shell: "kubeadm token create"
+  register: TOKEN
+  changed_when: "TOKEN.rc == 0"
+  failed_when: "TOKEN.rc != 0"
+  run_once: True
+  delegate_to: "{{groups['masters'][0]}}"
+
+- name: Generate hash
+  shell: "openssl x509 -pubkey -in /etc/kubernetes/pki/ca.crt | openssl rsa -pubin -outform der 2>/dev/null | openssl dgst -sha256 -hex | sed 's/^.* //'"
+  register: HASH
+  changed_when: "HASH.rc == 0"
+  failed_when: "HASH.rc != 0"
+  run_once: True
+  delegate_to: "{{groups['masters'][0]}}"
+
+- name: Generate certificate key  
+  shell: kubeadm init phase upload-certs --config /etc/kubernetes/kubeadmcfg.yaml --upload-certs | tail -1
+  register: CERTKEY
+  changed_when: "CERTKEY.rc == 0"
+  failed_when: "CERTKEY.rc != 0"
+  run_once: True
+  delegate_to: "{{groups['masters'][0]}}"
+
+
+- name: "debug"
+  debug:
+    msg: "TOKEN: {{TOKEN.stdout}} | HASH: {{HASH.stdout}} |  CERTKEY: {{CERTKEY.stdout}}"
+  run_once: True
+
+
+- name: "Idempotency check (workers)"
+  shell: KUBECONFIG=/etc/kubernetes/kubelet.conf kubeadm config view
+  register: is_worker
+  changed_when: "is_worker.rc != 0"
+  when: inventory_hostname not in groups['masters'][0]
+  ignore_errors: True
+
+- name: "Join workers"
+  shell: "kubeadm join {{groups['lb'][0]}}:6443 --token {{TOKEN.stdout}} --discovery-token-ca-cert-hash sha256:{{HASH.stdout}} --certificate-key {{CERTKEY.stdout}}"
+  when: 
+    - is_worker.changed|bool

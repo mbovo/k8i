@@ -14,28 +14,30 @@
 # You should have received a copy of the GNU General Public License
 # along with this program.  If not, see <https://www.gnu.org/licenses/>.
 ---
-- name: "Check for swap devices"
-  shell: swapon -s | grep -q dev
-  register: is_swap
-  changed_when: "is_swap.rc == 0"
-  failed_when: "is_swap.rc > 1"
 
-- name: "Disabling swap"
-  command: "swapoff -a"
-  when: not ansible_connection == "docker" and is_swap.rc == 0
+- name: "Remove workers from cluster"
+  shell: "KUBECONFIG=/etc/kubernetes/admin.conf kubectl delete node {{ansible_hostname}}"
+  when:
+    - "'workers' in group_names"
+  delegate_to: "{{groups['masters'][0]}}"
+  ignore_errors: True
 
-- name: "Setting swappiness to 0"
-  sysctl:
-    name: vm.swappiness
-    value: 0
-    state: present
-    reload: yes
-  when: is_swap.rc == 0
+- name: "Stopping services"
+  service:
+    name: "{{item}}"
+    state: stopped
+  with_items:
+    - kubelet
+    - docker
+    - etcd
+  ignore_errors: True
 
-- name: "Remove swap from fstab"
-  lineinfile:
-    path: "/etc/fstab"
-    regexp: "^/dev.*swap"
-    state: absent
-    backup: yes
-  when: is_swap.rc == 0
+- name: "Erasing etcd data"
+  file:
+    path: /var/lib/etcd
+    state: absent 
+  ignore_errors: True
+
+- name: "Reset cluster"
+  shell: kubeadm reset -f
+  ignore_errors: True

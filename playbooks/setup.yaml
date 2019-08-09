@@ -8,32 +8,39 @@
   roles:
     - {role: nginx}
   tags:
-    - ha
+    - lb
 
 - name: "Etcd"
   hosts: etcd
   roles:
-    - {role: prepare}
-    - {role: etcd}
+    - {role: prepare, tags: etcd_prepare}
+    - {role: etcd,    tags: etcd_install}
   tags:
     - etcd
 
 - name: "Kubernetes Control Plane"
   hosts: masters
   roles:
-    - {role: cri}
-    - {role: prepare}
-    - {role: master}
-    - {role: add-labels}
+    - {role: prepare,    tags: masters_prepare}
+    - {role: cri    ,    tags: masters_cri }
+    - {role: master ,    tags: masters_install}
+    - {role: add-labels, tags: masters_label}
   tags:
     - masters
 
-- name: "Kuernetes Workers"
+- name: "Kubernetes Workers"
   hosts: workers
   roles:
-    - {role: worker }
-    - {role: add-labels }
+    - {role: prepare,    tags: workers_prepare}
+    - {role: cri    ,    tags: workers_cri}
+    - {role: worker ,    tags: workers_install}
+    - {role: add-labels, tags: workers_label }
   tags:
     - workers
 
-
+- name: "Remove Nodes"
+  hosts: workers
+  roles:
+    - {role: reset, when: "toRemove|default('false')|bool" }
+  tags:
+    - remove

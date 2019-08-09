@@ -14,28 +14,13 @@
 # You should have received a copy of the GNU General Public License
 # along with this program.  If not, see <https://www.gnu.org/licenses/>.
 ---
-- name: "Check for swap devices"
-  shell: swapon -s | grep -q dev
-  register: is_swap
-  changed_when: "is_swap.rc == 0"
-  failed_when: "is_swap.rc > 1"
 
-- name: "Disabling swap"
-  command: "swapoff -a"
-  when: not ansible_connection == "docker" and is_swap.rc == 0
-
-- name: "Setting swappiness to 0"
-  sysctl:
-    name: vm.swappiness
-    value: 0
-    state: present
-    reload: yes
-  when: is_swap.rc == 0
-
-- name: "Remove swap from fstab"
-  lineinfile:
-    path: "/etc/fstab"
-    regexp: "^/dev.*swap"
-    state: absent
-    backup: yes
-  when: is_swap.rc == 0
+docker_kernel_options:
+  - name: net.ipv4.ip_forward
+    value: 1
+  - name: net.bridge.bridge-nf-call-arptables
+    value: 1
+  - name: net.bridge.bridge-nf-call-iptables
+    value: 1
+    
+timezone: "Europe/Rome"
