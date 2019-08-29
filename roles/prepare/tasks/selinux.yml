@@ -31,8 +31,8 @@
   service:
     name: firewalld
     state: stopped
-    disabled: yes
-
+    enabled: no
+    
 - debug: var=is_selinux_on
   when:  not ansible_connection == "docker"
 
