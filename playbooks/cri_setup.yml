@@ -1,0 +1,6 @@
+- name: "Install CRI"
+  hosts: masters
+  roles:
+    - {role: cri }
+  tags:
+    - masters
